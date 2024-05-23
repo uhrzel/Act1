@@ -12,8 +12,8 @@ private Address_22033701 address;
 
     // New constructor
     public House_22033701(String address, double sqMetersPerHour, double sqMetersPerLiter, String notes, String houseID) {
- /*   this.address = new Address_22033701(address); 
-   */
+   this.address = new Address_22033701(address, houseID, houseID, houseID); 
+   
         this.sqMetersPerHour = sqMetersPerHour;
         this.sqMetersPerLiter = sqMetersPerLiter;
         this.notes = notes;
