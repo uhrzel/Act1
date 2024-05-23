@@ -183,6 +183,7 @@ if (data.length >= 6) {
 
         Paint_22033701 paint = new Paint_22033701(barcode, brand, color, sheen, pricePerLitre, sqMetersPerLiter);
         paints.add(paint);
+         hasUnsavedChanges = true;  // Mark changes as unsaved
         System.out.println("Paint added successfully.");
         break;
     }
@@ -245,6 +246,8 @@ private static boolean getRetryChoice(Scanner scanner) {
         }
 
         paint.setPricePerLitre(newPrice);
+        hasUnsavedChanges = true;  // Mark changes as unsaved
+
         System.out.println("Paint price updated successfully.");
         break;
     }
@@ -258,21 +261,66 @@ private static Paint_22033701 findPaintByBarcode(String barcode) {
     return null;
 }
 
-    private static void generateHousePaintingReport(Scanner scanner) {
-        System.out.print("Enter the address of the house: ");
-        String address = scanner.nextLine();
+   private static void generateHousePaintingReport(Scanner scanner) {
+    System.out.print("Enter the ID of the house to be painted: ");
+    String houseID = scanner.nextLine();
 
-        for (House_22033701 house : houses) {
-            if (house.getAddress().equals(address)) {
-                System.out.println("House Painting Report:");
-                System.out.println("Address: " + house.getAddress());
-                System.out.println("Total Paint Cost: $" + house.calculateTotalPaintCost());
-                System.out.println("Total Paint Time: " + house.calculateTotalPaintTime() + " hours");
-                return;
-            }
-        }
-        System.out.println("House with the given address not found.");
+    // Find the house by ID
+    House_22033701 house = findHouseByID(houseID);
+    if (house == null) {
+        System.out.println("House with the given ID not found.");
+        return;
     }
+
+    // Display house information
+    System.out.println("House Painting Report:");
+    System.out.println("Address: " + house.getAddress());
+    System.out.println("Notes: " + house.getNotes());
+    System.out.printf("Square metres per litre: %.2f%n", house.getSqMetersPerLiter());
+    System.out.printf("Square metres per hour: %.2f%n", house.getSqMetersPerHour());
+    System.out.println("\nRooms to be Painted\n");
+
+    // Display table header
+    System.out.printf("%-15s %-10s %-5s %-10s %-25s %-10s %-10s %-10s %-10s%n",
+        "Description", "Area", "Coats", "Area*Coats", "Paint", "Price/Litre", "Litres Needed", "Paint Cost", "Hours Needed");
+    System.out.println("-----------------------------------------------------------------------------------------------------------------------");
+
+    double totalPaintCost = 0;
+    double totalHoursNeeded = 0;
+
+    for (Room_22033701 room : house.getRooms()) {
+        double roomArea = room.calculateSurfaceArea();
+        double areaCoats = roomArea * room.getCoats();
+        Paint_22033701 paint = room.getPaint();
+        double litresNeeded = areaCoats / house.getSqMetersPerLiter();
+        double paintCost = litresNeeded * paint.getPricePerLitre();
+        double hoursNeeded = areaCoats / house.getSqMetersPerHour();
+
+        // Display room information
+        System.out.printf("%-15s %-10.2f %-5d %-10.2f %-25s $%-10.2f %-10.2f $%-10.2f %-10.2f%n",
+            room.getDescription(), roomArea, room.getCoats(), areaCoats,
+            paint.getBrand() + " " + paint.getColor() + " " + paint.getSheen(),
+            paint.getPricePerLitre(), litresNeeded, paintCost, hoursNeeded);
+
+        totalPaintCost += paintCost;
+        totalHoursNeeded += hoursNeeded;
+    }
+
+    // Display totals
+    System.out.println("----------------------------------------------------------------------------------------------------------------------");
+    System.out.printf("%-85s $%-10.2f %-10.2f%n", "TOTAL", totalPaintCost, totalHoursNeeded);
+    
+}
+
+private static House_22033701 findHouseByID(String houseID) {
+    for (House_22033701 house : houses) {
+        if (house.getHouseID().equals(houseID)) {
+            return house;
+        }
+    }
+    return null;
+}
+
 private static void addNewHouse(ArrayList<House_22033701> houses, Scanner scanner) {
 
     String streetNumber, street, suburb, state, postcode, notes;
@@ -489,6 +537,8 @@ private static void addNewHouse(ArrayList<House_22033701> houses, Scanner scanne
 
     // Add house to list
     houses.add(house);
+    hasUnsavedChanges = true;  // Mark changes as unsaved
+
     System.out.println("New house added with ID of " + houseID);
 }
 
@@ -519,15 +569,14 @@ private static void saveData() {
         // Save paints
         for (Paint_22033701 paint : paints) {
             paintWriter.println(paint.getBarcode() + "," + paint.getBrand() + "," + paint.getColor() + "," +
-                                paint.getSheen() + "," + paint.getPricePerLitre());
+                                paint.getSheen() + "," + paint.getPricePerLitre() + "," + paint.getSqMetersPerLiter());
         }
 
         // Save houses, addresses, and rooms
         for (House_22033701 house : houses) {
+            Address_22033701 address = house.getAddress();
             houseWriter.println(house.getHouseID() + "," + house.getSqMetersPerHour() + "," + 
                                 house.getSqMetersPerLiter() + "," + house.getNotes());
-
-            Address_22033701 address = house.getAddress();
             addressWriter.println(house.getHouseID() + "," + address.getStreet() + "," +
                                   address.getSuburb() + "," + address.getState() + "," +
                                   address.getPostcode());
@@ -542,9 +591,9 @@ private static void saveData() {
     } catch (IOException e) {
         System.out.println("Error saving data: " + e.getMessage());
     }
+    hasUnsavedChanges = false;  // Data is now saved
     System.out.println("Data saved successfully.");
 }
-
 
    private static void exitProgram(Scanner scanner) {
         if (hasUnsavedChanges) {
