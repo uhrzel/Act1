@@ -3,7 +3,7 @@ package margarette;
 import java.io.*;
 import java.util.*;
 
-public class Main_22033701 {
+public class PaintingPlanner_22033701 {
     private static ArrayList<Paint_22033701> paints = new ArrayList<>();
     private static ArrayList<House_22033701> houses = new ArrayList<>();
  private static boolean hasUnsavedChanges = false;
